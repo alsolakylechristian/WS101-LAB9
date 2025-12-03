@@ -38,7 +38,7 @@ public class ProductGraphQLController {
     // Matches 'createProduct' in schema.graphqls
     @MutationMapping
     public Product createProduct(@Argument String name, @Argument Double price) {
-        // ID is null because the service handles auto-increment logic
+        // ID is null because JPA handles auto-increment logic
         Product newProduct = new Product(null, name, price);
         return productService.save(newProduct);
     }
@@ -48,12 +48,19 @@ public class ProductGraphQLController {
     public Product updateProduct(@Argument Long id, @Argument String name, @Argument Double price) {
         Product productDetails = new Product(null, name, price);
         Optional<Product> updated = productService.update(id, productDetails);
-        return updated.orElse(null); // Return null if ID not found (GraphQL handles nulls gracefully)
+        return updated.orElse(null);
     }
 
     // Matches 'deleteProduct' in schema.graphqls
     @MutationMapping
     public Boolean deleteProduct(@Argument Long id) {
         return productService.delete(id);
+    }
+
+    // 6. NEW: Mutation to reset all data and ID counter
+    @MutationMapping
+    public Boolean resetAllData() {
+        productService.resetProductIds();
+        return true;
     }
 }

@@ -24,4 +24,7 @@ type Mutation {
 
     # 5. DELETE
     deleteProduct(id: ID!): Boolean
+
+    # 6. NEW: Mutation to reset all data and ID counter
+    resetAllData: Boolean!
 }
