@@ -1,55 +1,51 @@
 package com.alsolakyle.lab7.service;
 
 import com.alsolakyle.lab7.model.Product;
+import com.alsolakyle.lab7.repository.ProductRepository; // New import
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Service // Registers this as a business logic component [cite: 242]
+@Service
 public class ProductService {
 
-    // In-memory database [cite: 243]
-    private final List<Product> productList = new ArrayList<>();
+    private final ProductRepository productRepository; // Use Repository instead of List
 
-    public ProductService() {
-        // Initialize with at least three mock products [cite: 244]
-        productList.add(new Product(1L, "Laptop Pro", 1200.00));
-        productList.add(new Product(2L, "Smartphone X", 800.00));
-        productList.add(new Product(3L, "Wireless Earbuds", 150.00));
+    // Constructor Injection of the Repository
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
     public List<Product> findAll() {
-        return productList;
+        return productRepository.findAll(); // Simple delegation
     }
 
     public Optional<Product> findById(Long id) {
-        // Stream the list to find a product matching the ID
-        return productList.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst();
+        return productRepository.findById(id); // Simple delegation
     }
 
     public Product save(Product product) {
-        // Simulate auto-increment ID [cite: 272]
-        Long newId = productList.isEmpty() ? 1L : productList.get(productList.size() - 1).getId() + 1;
-        product.setId(newId);
-        productList.add(product);
-        return product;
+        // Repository handles INSERT vs. UPDATE and ID generation automatically [cite: 46, 72]
+        return productRepository.save(product);
     }
 
     public boolean delete(Long id) {
-        return productList.removeIf(p -> p.getId().equals(id));
+        if (productRepository.existsById(id)) {
+            productRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     public Optional<Product> update(Long id, Product updatedDetails) {
-        Optional<Product> existingProduct = findById(id);
-        if (existingProduct.isPresent()) {
-            Product product = existingProduct.get();
-            product.setName(updatedDetails.getName());
-            product.setPrice(updatedDetails.getPrice());
-            return Optional.of(product);
-        }
-        return Optional.empty();
+        return productRepository.findById(id)
+                .map(product -> {
+                    // Update the managed entity [cite: 88]
+                    product.setName(updatedDetails.getName());
+                    product.setPrice(updatedDetails.getPrice());
+                    // JPA's dirty checking will handle the update on transaction commit[cite: 89].
+                    // Explicit save() is optional for managed entities but safe.
+                    return productRepository.save(product);
+                });
     }
 }
