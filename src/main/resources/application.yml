@@ -3,7 +3,6 @@ spring:
   # Datasource Connection Configuration
   # ----------------------------------
   datasource:
-    # 4 spaces (Level 2)
     url: jdbc:mysql://localhost:3307/product_db
     username: root
     password: "0001"
@@ -13,9 +12,9 @@ spring:
   # JPA (Hibernate) Configuration
   # ----------------------------------
   jpa:
-    # 4 spaces (Level 2)
     hibernate:
-      # 6 spaces (Level 3)
       ddl-auto: update # Automatically creates/updates the table schema
     show-sql: true # Prints the generated SQL to the console
     database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate.format_sql: true

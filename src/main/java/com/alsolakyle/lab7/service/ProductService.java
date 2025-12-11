@@ -1,31 +1,39 @@
 package com.alsolakyle.lab7.service;
 
 import com.alsolakyle.lab7.model.Product;
-import com.alsolakyle.lab7.repository.ProductRepository; // NEW IMPORT
+import com.alsolakyle.lab7.repository.ProductRepository;
 import org.springframework.stereotype.Service;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ProductService {
 
-    private final ProductRepository productRepository; // Use Repository instead of List
+    private final ProductRepository productRepository;
+    private final EntityManager entityManager;
+    private final CustomerService customerService;
+    private final InvoiceService invoiceService;
 
-    // Constructor Injection
-    public ProductService(ProductRepository productRepository) {
+    // CONSTRUCTOR: Inject all required dependencies
+    public ProductService(ProductRepository productRepository, EntityManager entityManager,
+                          CustomerService customerService, InvoiceService invoiceService) {
         this.productRepository = productRepository;
+        this.entityManager = entityManager;
+        this.customerService = customerService;
+        this.invoiceService = invoiceService;
     }
 
     public List<Product> findAll() {
-        return productRepository.findAll(); // Delegate to JPA
+        return productRepository.findAll();
     }
 
     public Optional<Product> findById(Long id) {
-        return productRepository.findById(id); // Delegate to JPA
+        return productRepository.findById(id);
     }
 
     public Product save(Product product) {
-        // JPA handles ID generation and persistence automatically
         return productRepository.save(product);
     }
 
@@ -40,15 +48,37 @@ public class ProductService {
     public Optional<Product> update(Long id, Product updatedDetails) {
         return productRepository.findById(id)
                 .map(product -> {
-                    // Update the managed entity
-                    product.setName(updatedDetails.getName());
-                    product.setPrice(updatedDetails.getPrice());
-                    return productRepository.save(product); // Explicit save (optional but safe)
+                    if (updatedDetails.getName() != null) {
+                        product.setName(updatedDetails.getName());
+                    }
+                    if (updatedDetails.getPrice() != null) {
+                        product.setPrice(updatedDetails.getPrice());
+                    }
+                    return productRepository.save(product);
                 });
     }
 
-    // 6. NEW: Method to call the TRUNCATE functionality
-    public void resetProductIds() {
-        productRepository.resetAutoIncrement();
+    // TRUNCATE FEATURE (used internally by resetDatabase)
+    @Transactional
+    public void truncateTable() {
+        productRepository.truncateTable();
+    }
+
+    // MASTER RESET METHOD: Executes all steps on the SAME database connection
+    @Transactional
+    public void resetDatabase() {
+        try {
+            // STEP 1: Disable foreign key checks on the current connection
+            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+
+            // STEP 2: Execute all truncates (Order is generally dependent-first: Invoice -> Customer -> Product)
+            invoiceService.truncateTable();
+            customerService.truncateTable();
+            this.truncateTable();
+
+        } finally {
+            // STEP 3: Re-enable foreign key checks on the same connection
+            entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+        }
     }
 }

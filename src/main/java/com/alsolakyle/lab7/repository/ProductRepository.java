@@ -4,19 +4,16 @@ import com.alsolakyle.lab7.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import jakarta.transaction.Transactional; // Use jakarta for Spring Boot 3+
+import jakarta.transaction.Transactional;
 
-// Extends JpaRepository<EntityClass, PrimaryKeyType>
-// This interface provides all standard CRUD methods automatically.
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    /**
-     * Executes the TRUNCATE TABLE command.
-     * This deletes all records and resets the auto-increment ID counter back to 1.
-     * Use this for integration testing or administrative resets.
+    /*
+     * Executes the TRUNCATE TABLE command for the 'product' table.
+     * This deletes all records and resets the auto-increment ID counter.
      */
-    @Modifying // Required for queries that modify data (like TRUNCATE)
-    @Transactional // Required to execute DML/DDL operations
+    @Modifying // Required for DML/DDL operations
+    @Transactional // Ensures the operation runs within a transaction
     @Query(value = "TRUNCATE TABLE product", nativeQuery = true)
-    void resetAutoIncrement();
+    void truncateTable();
 }

@@ -1,30 +1,53 @@
-# Type definition matching your Product model
+# --- JPA ENTITY TYPES ---
+
 type Product {
     id: ID!
     name: String
     price: Float
 }
 
-# Queries (equivalent to GET requests)
-type Query {
-    # 1. READ ALL
-    allProducts: [Product]
-
-    # 2. READ ONE
-    productById(id: ID!): Product
+type Customer {
+    id: ID!
+    name: String!
+    email: String
+    invoices: [Invoice]
 }
 
-# Mutations (equivalent to POST, PUT, DELETE requests)
+type Invoice {
+    id: ID!
+    invoiceDate: String!
+    customer: Customer!
+    products: [Product]
+}
+
+# --- QUERIES (READ Operations) ---
+type Query {
+    # Product Queries
+    allProducts: [Product]
+    productById(id: ID!): Product
+
+    # Customer Queries
+    allCustomers: [Customer]
+    customerById(id: ID!): Customer
+
+    # Invoice Queries
+    allInvoices: [Invoice]
+    invoiceById(id: ID!): Invoice
+}
+
+# --- MUTATIONS (WRITE Operations) ---
 type Mutation {
-    # 3. CREATE
+    # Product Mutations
     createProduct(name: String!, price: Float!): Product
-
-    # 4. UPDATE
     updateProduct(id: ID!, name: String, price: Float): Product
-
-    # 5. DELETE
     deleteProduct(id: ID!): Boolean
+    resetAllData: Boolean! # FULL TRUNCATE FEATURE
 
-    # 6. NEW: Mutation to reset all data and ID counter
-    resetAllData: Boolean!
+    # Customer Mutations
+    createCustomer(name: String!, email: String!): Customer
+    updateCustomer(id: ID!, name: String, email: String): Customer
+    deleteCustomer(id: ID!): Boolean
+
+    # Invoice Mutation
+    createInvoice(customerId: ID!, productIds: [ID!]!): Invoice
 }
