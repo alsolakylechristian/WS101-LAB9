@@ -1,5 +1,6 @@
 package com.alsolakyle.lab7.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference; // NEW IMPORT
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,5 +20,6 @@ public class Customer {
 
     // 1. Customer <-> Invoice (One-to-Many)
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference // ADDED: Serializes the list of Invoices
     private List<Invoice> invoices;
 }
